@@ -1,0 +1,60 @@
+CREATE TABLE lab_prj_emir_ecb.hermesf_fx AS
+SELECT
+    buyer_id, seller_id, buyer_sector, seller_sector,
+    reference_period, maturity_date, effective_date,
+    remaining_maturity, original_maturity, contract_type,
+    CAST(notional AS DECIMAL(38,13)) AS notional,
+    currency1, currency2,
+    CAST(notional_eur AS DECIMAL(38,13)) AS notional_eur,
+    base_currency,
+    CAST(fx_rate AS DECIMAL(38,13)) AS fx_rate,
+    buyer_nfc, seller_nfc
+FROM lab_prj_emir_ecb.hermesf_fx_p1
+UNION ALL
+SELECT
+    buyer_id, seller_id, buyer_sector, seller_sector,
+    reference_period, maturity_date, effective_date,
+    remaining_maturity, original_maturity, contract_type,
+    CAST(notional AS DECIMAL(38,13)) AS notional,
+    currency1, currency2,
+    CAST(notional_eur AS DECIMAL(38,13)) AS notional_eur,
+    base_currency,
+    CAST(fx_rate AS DECIMAL(38,13)) AS fx_rate,
+    buyer_nfc, seller_nfc
+FROM lab_prj_emir_ecb.hermesf_fx_p2
+UNION ALL
+SELECT
+    buyer_id, seller_id, buyer_sector, seller_sector,
+    reference_period, maturity_date, effective_date,
+    remaining_maturity, original_maturity, contract_type,
+    CAST(notional AS DECIMAL(38,13)) AS notional,
+    currency1, currency2,
+    CAST(notional_eur AS DECIMAL(38,13)) AS notional_eur,
+    base_currency,
+    CAST(fx_rate AS DECIMAL(38,13)) AS fx_rate,
+    buyer_nfc, seller_nfc
+FROM lab_prj_emir_ecb.hermesf_fx_p3
+UNION ALL
+SELECT
+    buyer_id, seller_id, buyer_sector, seller_sector,
+    reference_period, maturity_date, effective_date,
+    remaining_maturity, original_maturity, contract_type,
+    CAST(notional AS DECIMAL(38,13)) AS notional,
+    currency1, currency2,
+    CAST(notional_eur AS DECIMAL(38,13)) AS notional_eur,
+    base_currency,
+    CAST(fx_rate AS DECIMAL(38,13)) AS fx_rate,
+    buyer_nfc, seller_nfc
+FROM lab_prj_emir_ecb.hermesf_fx_refit_p1
+UNION ALL
+SELECT
+    buyer_id, seller_id, buyer_sector, seller_sector,
+    reference_period, maturity_date, effective_date,
+    remaining_maturity, original_maturity, contract_type,
+    CAST(notional AS DECIMAL(38,13)) AS notional,
+    currency1, currency2,
+    CAST(notional_eur AS DECIMAL(38,13)) AS notional_eur,
+    base_currency,
+    CAST(fx_rate AS DECIMAL(38,13)) AS fx_rate,
+    buyer_nfc, seller_nfc
+FROM lab_prj_emir_ecb.hermesf_fx_refit_p2;

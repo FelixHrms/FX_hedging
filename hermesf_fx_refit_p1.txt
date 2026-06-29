@@ -1,0 +1,43 @@
+CREATE TABLE lab_prj_emir_ecb.hermesf_fx_refit_p1 AS
+
+WITH fx AS (
+    SELECT
+        CASE WHEN leg1_direction = 'BYER' OR leg1_direction = 'TAKE' THEN leg1_reporting_cpty_id
+             WHEN leg1_direction = 'SLLR' OR leg1_direction = 'MAKE' THEN leg1_other_cpty_id
+        END AS buyer_id,
+        CASE WHEN leg1_direction = 'BYER' OR leg1_direction = 'TAKE' THEN leg1_other_cpty_id
+             WHEN leg1_direction = 'SLLR' OR leg1_direction = 'MAKE' THEN leg1_reporting_cpty_id
+        END AS seller_id,
+        CASE WHEN leg1_direction = 'BYER' OR leg1_direction = 'TAKE' THEN leg1_reporting_cpty_id_esa_sector_riad
+             WHEN leg1_direction = 'SLLR' OR leg1_direction = 'MAKE' THEN leg1_other_cpty_id_esa_sector_riad
+        END AS buyer_sector,
+        CASE WHEN leg1_direction = 'BYER' OR leg1_direction = 'TAKE' THEN leg1_other_cpty_id_esa_sector_riad
+             WHEN leg1_direction = 'SLLR' OR leg1_direction = 'MAKE' THEN leg1_reporting_cpty_id_esa_sector_riad
+        END AS seller_sector,
+        
+        reference_period,
+        LEFT(CAST(leg1_maturity_date  AS STRING),10) AS maturity_date,
+        LEFT(CAST(leg1_effective_date AS STRING),10) AS effective_date,
+        datediff(leg1_maturity_date, CAST(reference_period AS TIMESTAMP))      AS remaining_maturity,
+        datediff(leg1_maturity_date, leg1_effective_date)   AS original_maturity,
+        
+        leg1_contract_type AS contract_type, leg1_notional_leg1 AS notional,
+        leg1_notional_leg1_currency AS currency1, leg1_notional_leg2_currency AS currency2,
+        leg1_notional_leg1_eur AS notional_eur, leg1_exchange_rate_base_currency AS base_currency,
+        coalesce(leg1_fwd_exchange_rate, leg1_exchange_rate, leg1_price) AS fx_rate
+        
+    FROM crp_emir_refit_ecb.emir_refit_ecb_trade_states_deduplicated
+    WHERE leg1_asset_class = 'CURR'
+    AND reference_period > '2024-04-26' AND reference_period <= '2025-07-01'
+    AND leg1_direction IS NOT NULL
+)
+SELECT
+    f.*,
+    CASE WHEN b.lei IS NOT NULL THEN 1 ELSE 0 END AS buyer_nfc,
+    CASE WHEN s.lei IS NOT NULL THEN 1 ELSE 0 END AS seller_nfc
+FROM fx f
+LEFT JOIN lab_prj_emir_ecb.hermesf_entities b ON f.buyer_id  = b.lei
+LEFT JOIN lab_prj_emir_ecb.hermesf_entities s ON f.seller_id = s.lei
+WHERE (b.lei IS NOT NULL OR s.lei IS NOT NULL)
+  AND original_maturity  IS NOT NULL  
+  AND remaining_maturity IS NOT NULL; 

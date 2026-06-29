@@ -1,0 +1,39 @@
+CREATE TABLE lab_prj_emir_ecb.hermesf_fx_p1 AS
+WITH fx AS (
+    SELECT
+        -- direction: leg1_counterparty_side refers to the REPORTING party
+        CASE WHEN leg1_counterparty_side = 'BYER' THEN leg1_reporting_cpty_id
+             WHEN leg1_counterparty_side = 'SLLR' THEN leg1_other_cpty_id
+        END AS buyer_id,
+        CASE WHEN leg1_counterparty_side = 'BYER' THEN leg1_other_cpty_id
+             WHEN leg1_counterparty_side = 'SLLR' THEN leg1_reporting_cpty_id
+        END AS seller_id,
+
+        -- same flip for any paired attribute (sector shown; copy for the rest)
+        CASE WHEN leg1_counterparty_side = 'BYER' THEN leg1_reporting_cpty_id_esa_sector
+             WHEN leg1_counterparty_side = 'SLLR' THEN leg1_other_cpty_id_esa_sector
+        END AS buyer_sector,
+        CASE WHEN leg1_counterparty_side = 'BYER' THEN leg1_other_cpty_id_esa_sector
+             WHEN leg1_counterparty_side = 'SLLR' THEN leg1_reporting_cpty_id_esa_sector
+        END AS seller_sector,
+
+        -- dates
+        reference_period, leg1_maturity_date as maturity_date, leg1_effective_date as effective_date, datediff(leg1_maturity_date, reference_period) remaining_maturity, datediff(leg1_maturity_date, leg1_effective_date) as original_maturity, 
+        
+        -- contract information 
+        leg1_contract_type as contract_type, leg1_notional as notional, leg1_notional_currency1 as currency1, leg1_notional_currency2 as currency2, leg1_notional_eur as notional_eur, leg1_exchange_rate_base_currency as base_currency, 
+        coalesce(leg1_fwd_exchange_rate, leg1_exchange_rate, leg1_price_rate) as fx_rate
+        
+    FROM crp_emir_ecb.emir_ecb_states_deduplicated
+    WHERE leg1_asset_class = 'CURR'
+    AND reference_period <= '2019-01-01'
+)
+
+SELECT
+    f.*,
+    CASE WHEN b.lei IS NOT NULL THEN 1 ELSE 0 END AS buyer_nfc,
+    CASE WHEN s.lei IS NOT NULL THEN 1 ELSE 0 END AS seller_nfc
+FROM fx f
+LEFT JOIN lab_prj_emir_ecb.hermesf_entities b ON f.buyer_id  = b.lei
+LEFT JOIN lab_prj_emir_ecb.hermesf_entities s ON f.seller_id = s.lei
+WHERE b.lei IS NOT NULL OR s.lei IS NOT NULL;
